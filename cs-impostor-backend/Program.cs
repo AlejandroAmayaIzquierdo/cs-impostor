@@ -45,29 +45,35 @@ public class Program
             {
                 if (socket.ConnectionInfo.Headers.TryGetValue("Origin", out string? value))
                 {
-                    var origin = value;
+                    var (isJoined, outMsg) = StateService.Game.TryJoin(socket);
 
-                    // List of allowed origins (e.g., your website domain)
-                    var allowedOrigins = allowedHosts;
-                    // Check if the Origin is in the allowed origins list
-                    if (allowedHosts.Contains("*"))
+                    if (!isJoined)
                     {
-                        StateService.AddConnection(socket);
+                        // FIXME send error code or something that is not string
+                        socket.Send("Error");
                         return;
                     }
-                    else if (!string.IsNullOrEmpty(origin) && allowedOrigins.Contains(origin))
+                    using var memoryStream = new MemoryStream();
+                    using BinaryWriter writer = new(memoryStream);
+
+                    bool isParse = int.TryParse(outMsg, out int playerID);
+
+                    if (!isParse)
                     {
-                        StateService.AddConnection(socket);
+                        socket.Send("Error");
                         return;
                     }
-                    socket.Send("No allowed host");
-                    socket.Close();
+
+                    writer.Write(playerID);
+                    byte[] pack = memoryStream.ToArray();
+                    socket.Send(pack);
+
                 }
             };
             socket.OnBinary = (data) =>
             {
+                // FIXME Global error handling
                 app.InvokeEventHandlerBinaryData(services, socket, data);
-                // await new ChatEvent().InvokeHandle(reader);
 
             };
             socket.OnMessage = async (message) =>
@@ -76,18 +82,15 @@ public class Program
                 {
                     await app.InvokeClientEventHandler(services, socket, message);
                 }
-                catch (Exception e)
+                catch
                 {
-                    StateService.RemoveConnection(socket.ConnectionInfo.Id);
-
-                    var errorObj = new { error = e.Message };
-                    var messageError = JsonSerializer.Serialize(errorObj);
-                    await socket.Send(messageError);
+                    StateService.Game.Leave(socket.ConnectionInfo.Id);
+                    await socket.Send("Error");
                 }
             };
             socket.OnClose = () =>
             {
-                StateService.RemoveConnection(socket.ConnectionInfo.Id);
+                StateService.Game.Leave(socket.ConnectionInfo.Id);
 
             };
         });

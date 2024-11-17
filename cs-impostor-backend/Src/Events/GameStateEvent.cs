@@ -13,8 +13,22 @@ public class GameStateEvent : BaseEventHandler<PlayerUpdatePacket>
 
     public override Task Handle(PlayerUpdatePacket dto, IWebSocketConnection socket)
     {
-        StateService.BroadCastClients($"Player {dto.PlayerID} on x: {dto.PositionX}, y: {dto.PositionY}, z: {dto.PositionZ}", socket);
-        // Console.WriteLine($"Player {dto.PlayerID} on x: {dto.PositionX}, y: {dto.PositionY}, z: {dto.PositionZ}");
+        using var memoryStream = new MemoryStream();
+        using BinaryWriter writer = new(memoryStream);
+
+        byte header = EventType;
+        int playerId = dto.PlayerID; // Player ID
+        float posX = dto.PositionX, posY = dto.PositionY, posZ = dto.PositionZ; // Position
+
+        byte[] packet;
+
+        writer.Write(header);
+        writer.Write(playerId);
+        writer.Write(posX); writer.Write(posY); writer.Write(posZ);
+        packet = memoryStream.ToArray();
+
+
+        StateService.BroadCastClients(packet, socket);
         return Task.CompletedTask;
     }
 }

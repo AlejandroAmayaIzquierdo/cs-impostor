@@ -1,5 +1,3 @@
-
-
 using System.Reflection;
 using System.Text;
 using Fleck;
@@ -8,19 +6,19 @@ using WS.Util;
 
 namespace WS.Events;
 
-public abstract class BaseEventHandler<T> where T : BaseEvent
+public abstract class BaseEventHandler<T>
+    where T : BaseEvent
 {
     public abstract byte EventType { get; }
+
     public async Task InvokeHandle(BinaryReader reader, IWebSocketConnection socket)
     {
         // Ensure `T` has a parameterless constructor
         if (Activator.CreateInstance(typeof(T)) is not T dto)
             throw new Exception("Unable to create instance of type T");
 
-
         var properties = typeof(T).GetProperties().Where(p => p.Name != "Header");
         var propertiesInfo = new List<(PropertyInfo Property, BinaryData Attribute)>();
-
 
         // Collect properties with BinaryData attribute
         foreach (var prop in properties)
@@ -45,7 +43,10 @@ public abstract class BaseEventHandler<T> where T : BaseEvent
             {
                 8 => reader.ReadByte(),
                 16 => reader.ReadInt16(),
-                32 => reader.ReadInt32(),
+                32
+                    => property.PropertyType == typeof(float)
+                        ? reader.ReadSingle()
+                        : reader.ReadInt32(),
                 -1 => BaseEventHandler<T>.ReadStringToEnd(reader),
                 _ => null
             };
@@ -79,5 +80,4 @@ public abstract class BaseEventHandler<T> where T : BaseEvent
     }
 
     public abstract Task Handle(T dto, IWebSocketConnection socket);
-
 }

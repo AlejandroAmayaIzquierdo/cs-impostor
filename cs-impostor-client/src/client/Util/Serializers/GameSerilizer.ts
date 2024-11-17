@@ -1,4 +1,8 @@
+import { GameState } from '../../Game/GameState';
+
 const serializePlayerUpdateEvent = (playerPosition: { x: number; y: number; z: number }) => {
+    if (!GameState.playerID) return;
+
     const buffer = new ArrayBuffer(1 + 4 + 4 + 4 + 4);
     const view = new DataView(buffer);
 
@@ -9,19 +13,19 @@ const serializePlayerUpdateEvent = (playerPosition: { x: number; y: number; z: n
     offset++;
 
     //player id
-    view.setUint32(offset, 12345, true);
+    view.setInt32(offset, GameState.playerID, true);
     offset += 4;
 
     //player x
-    view.setUint32(offset, playerPosition.x, true);
+    view.setFloat32(offset, playerPosition.x, true);
     offset += 4;
 
     //player y
-    view.setUint32(offset, playerPosition.y, true);
+    view.setFloat32(offset, playerPosition.y, true);
     offset += 4;
 
     //player z
-    view.setUint32(offset, playerPosition.z, true);
+    view.setFloat32(offset, playerPosition.z, true);
     offset += 4;
 
     return buffer;

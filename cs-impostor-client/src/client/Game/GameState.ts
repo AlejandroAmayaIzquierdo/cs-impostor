@@ -1,4 +1,4 @@
 export class GameState {
-    public playerID?: number;
-    public players: number[] = [];
+    public static playerID?: number;
+    public static players: any = {};
 }

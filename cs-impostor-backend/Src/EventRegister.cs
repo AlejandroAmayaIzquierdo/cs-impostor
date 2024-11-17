@@ -38,8 +38,6 @@ public static class EventRegister
         using var reader = new BinaryReader(new MemoryStream(data));
         var header = reader.ReadByte();
 
-        Console.WriteLine(types);
-
         foreach (var type in types)
         {
             if (type == null)
@@ -62,7 +60,11 @@ public static class EventRegister
                 {
                     /// XXX Check if need to be done something here
                 });
+
+
             }
+
+            awaiter.GetResult();
         }
 
     }

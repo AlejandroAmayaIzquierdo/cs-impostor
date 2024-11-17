@@ -44,21 +44,21 @@ public abstract class BaseEventHandler<T> where T : BaseEvent
             object? value = attr.Size switch
             {
                 8 => reader.ReadByte(),
-                16 => reader.ReadUInt16(),
-                32 => reader.ReadUInt32(),
-                -1 => ReadStringToEnd(reader),
+                16 => reader.ReadInt16(),
+                32 => reader.ReadInt32(),
+                -1 => BaseEventHandler<T>.ReadStringToEnd(reader),
                 _ => null
             };
 
             if (value != null)
                 property.SetValue(dto, Convert.ChangeType(value, property.PropertyType));
-            Console.WriteLine(value);
+            // Console.WriteLine(value);
         }
         dto.Header = EventType;
         await Handle(dto, socket);
     }
 
-    private string ReadStringToEnd(BinaryReader reader)
+    private static string ReadStringToEnd(BinaryReader reader)
     {
         // Calculate how many bytes are left in the stream
         long remainingBytes = reader.BaseStream.Length - reader.BaseStream.Position;

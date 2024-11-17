@@ -56,9 +56,14 @@ public static class StateService
         }
     }
 
-    public static void BroadCastClients(string data)
+    public static void BroadCastClients(string data, IWebSocketConnection? socketOwner = null)
     {
-        foreach (var item in _sockets)
-            item.Value.Send(data);
+        foreach (var socket in _sockets)
+        {
+            if (socketOwner != null && socket.Value.ConnectionInfo.Id == socketOwner.ConnectionInfo.Id)
+                continue;
+            socket.Value.Send(data);
+
+        }
     }
 }

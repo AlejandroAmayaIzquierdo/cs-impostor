@@ -64,7 +64,7 @@ public class Program
                     socket.Close();
                 }
             };
-            socket.OnBinary = async (data) =>
+            socket.OnBinary = (data) =>
             {
                 app.InvokeEventHandlerBinaryData(services, socket, data);
                 // await new ChatEvent().InvokeHandle(reader);
